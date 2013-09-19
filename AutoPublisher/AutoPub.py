@@ -11,6 +11,8 @@ fieldDict = pickle.load(pklFile)
 pklFile = file(saveLoc+"\\pklFileDIR.txt", 'r')
 path = pickle.load(pklFile)
 
+pathGlob = path
+
 try:
     pklFile = file(saveLoc+"\\MXD_File.txt", 'r')
     MXD_File = pickle.load(pklFile)
@@ -29,8 +31,14 @@ if FLDROptIn == 'Name Folder':
     FLDR_MXD = pickle.load(pklFile)
 else: pass
 
-pklFileServ = file(saveLoc+"\\pklFileServ.txt", 'r')
-Services = pickle.load(pklFileServ)
+pklFileGDB = file(saveLoc+"\\pklFileGDBDIR.txt", 'r')
+GDBpathORG = pickle.load(pklFileGDB)
+
+try:
+    pklFileErr = file (saveLoc+"\\pklFileErrMaps.txt", 'r')
+    retryMaps = pickle.load(pklFileErr)
+    pklFileErr.close()
+except: retryMaps = [] #no maps to load
 
 print "WORKING"
 #IMPORT all other modules
@@ -170,7 +178,7 @@ arcpy.env.workspace = path
 splitter = '\\' #ignore
 #clear lists
 errorList = []
-retryMaps = []
+
 #Define function for adding map names to errorList and retryMaps
 def addMap():
     retryMaps.append(str(map))
@@ -181,33 +189,38 @@ def addMap():
     mapList = [path]''' # replaced by OneOrAll
 if OneOrAll == 'One':
     mapList = [MXD_File]
+elif OneOrAll == "Retry Last":
+    mapList = retryMaps[:]
 
 else:
     if FLDROptIn == "Name Folder":
-        print "Searching for MXD files in " + str(path)
-        mapaList = glob.glob(path+'\\*\\'+FLDR_MXD+'\\*.mxd')
-        mapbList = glob.glob(path+'\\*\\*\\'+FLDR_MXD+'\\*.mxd')
-        mapcList = glob.glob(path+'\\*\\*\\*\\'+FLDR_MXD+'\\*.mxd')
-        mapdList = glob.glob(path+'\\*\\*\\*\\*\\'+FLDR_MXD+'\\*.mxd')
-        mapeList = glob.glob(path+'\\'+FLDR_MXD+'\\*.mxd')
-        if path.endswith(FLDR_MXD):
-            mapfList = glob.glob(path+'\\*.mxd')
-        else: mapfList = []
+        mapList = []
+        findMXD = ['pass']#in order to start the while loop
+        mxd_search_params = '.mxd'
+        while len(findMXD) > 0: #While a downward search still produces results
+            findMXD = glob.glob(pathGlob)
+            for item in findMXD:
+                if item.rsplit(splitter,1)[0].endswith(FLDR_MXD)==True:
+                    if item.endswith(mxd_search_params) == True:
+                        mapList.append(item)
+            pathGlob = pathGlob + '\\*'
 
     else:
         print "Searching for MXD files in " + str(path)
-        mapaList = glob.glob(path+'\\*\\*\\*.mxd')
-        mapbList = glob.glob(path+'\\*\\*\\*\\*.mxd')
-        mapcList = glob.glob(path+'\\*\\*\\*\\*\\*.mxd')
-        mapdList = glob.glob(path+'\\*\\*\\*\\*\\*\\*.mxd')
-        mapeList = glob.glob(path+'\\*\\*.mxd')
-        mapfList = glob.glob(path+'\\*.mxd')
+        mapList = []
+        findMXD = ['pass']#in order to start the while loop
+        mxd_search_params = '.mxd'
+        while len(findMXD) > 0: #While a downward search still produces results
+            findMXD = glob.glob(pathGlob)
+            for item in findMXD:
+                if item.endswith(mxd_search_params) == True:
+                    mapList.append(item)
+            pathGlob = pathGlob + '\\*'
 
-    #Add the contents of each sub directory to the same list
-    mapList = mapaList+mapbList+mapcList+mapdList+mapeList+mapfList
+#Clear retry list for new maps
+retryMaps = []
 
-#mapList = ['\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Connecticut\\service_mxd\\CTAeromagneticMap.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Connecticut\\service_mxd\\CTAeromagneticMap_SouthernNewEngland.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Connecticut\\service_mxd\\CTAeroradioactivityMap_NewYork_NewEngland.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Connecticut\\service_mxd\\CTAeroradioactivityMap_NY_CT_RI_MA.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Connecticut\\service_mxd\\CTRadonPotentialMap.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INChicagoQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INCinncinatiQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INDanvilleQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INFortWayneQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INIndianapolisQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INLouisvilleQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INMuncieQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Indiana\\service_mxd\\INVincennesQuadBedrockGeology.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Iowa\\service_mxd\\IABedrockDepth.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Iowa\\service_mxd\\IABoreholeLithIntervals.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Iowa\\service_mxd\\IAHeatPumpFacilities.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Iowa\\service_mxd\\IAWellLogs.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Maine\\service_mxd\\MEaqWellChemistry.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Maine\\service_mxd\\MEHeatFlow.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Massachusetts\\service_mxd\\MAWellLogs.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Michigan\\service_mxd\\MIWellLogs.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Missouri\\service_mxd\\MOHeatPumpLogs.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Ohio\\service_mxd\\OHSeismicHypocenters.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Pennsylvania\\service_mxd\\PASeismicHypocenters.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Rhode_Island\\service_mxd\\RIWellheaders.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Vermont\\service_mxd\\VTSurficialGeologyWoodsvilleQuad.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Vermont\\service_mxd\\VTBull11Concord.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Vermont\\service_mxd\\VTSurficialGeologyBellowsFallsQuad.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Vermont\\service_mxd\\VTSurficialGeologyStraffordQuad.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Vermont\\service_mxd\\VTSurficialGeologyTiconderogaQuad.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\Vermont\\service_mxd\\VTSurficialGeologyWoodstockQuad.mxd', '\\\\VOLCANO\\lidartest\\devarcserv\\arcgisserver\\datafiles\\aasggeothermal\\West_Virginia\\service_mxd\\WVBoreholeTemperatures.mxd']
-
+#Start main editing/publishing loop
 for map in mapList:
     print map
 
@@ -297,18 +310,36 @@ for map in mapList:
         except: print "Credit edit failed"
         print map
 
-
-
         #Check for broken data sources and print them
         brknList = arcpy.mapping.ListBrokenDataSources(mxd)
         for brknItem in brknList:
             print "\t" + brknItem.name
+            print "\t" + brknItem.dataSource
+            ###- Repair Data Source (Still in testing)
+            oldSource = brknItem.dataSource
+            oldSource = oldSource.rsplit(splitter, 1)[0]
+            #The following commented out portion works perfectly at ISGS or on a server that used the File System Restructure script
+            '''end_of_old = oldSource.rsplit(splitter, 2)[1] + splitter + oldSource.rsplit(splitter, 2)[2]
+            newSource = parentFolder + splitter + end_of_old
+            brknItem.findAndReplaceWorkspacePath(oldSource,newSource)'''
+            #OR
+            gdb_folder = oldSource.rsplit(splitter, 2)[1] + splitter + oldSource.rsplit(splitter, 2)[2]       
+            gdbSearch = ['pass'] #in order to start the while loop
+            GDBpath = GDBpathORG
 
-        ###- Repair Data Source Still in testing
-            
+            while len(gdbSearch) > 0: #While a downward search still produces results
+                gdbSearch = glob.glob(GDBpath)
+                for item in gdbSearch:
+                    if item.endswith(gdb_folder) == True:
+                        newSource = item
+                GDBpath = GDBpath + '\\*'
+            try:
+                brknItem.findAndReplaceWorkspacePath(oldSource,newSource)
+            except: pass
+
         #Save MXD
         mxd.save()
-
+        print "New Data Source Saved"
         # Provide path to connection file
         '''To create this file, right-click a folder in the Catalog window and
           click New > ArcGIS Server Connection'''
@@ -326,7 +357,9 @@ for map in mapList:
 
         # Create service definition draft
         print "Creating Service Definition Draft"
-        arcpy.mapping.CreateMapSDDraft(mxd, sddraft, Service, 'ARCGIS_SERVER', con, False, 'aasggeothermal')
+        try:
+            arcpy.mapping.CreateMapSDDraft(mxd, sddraft, Service, 'ARCGIS_SERVER', con, False, 'aasggeothermal')
+        except: print "Creation of SDDraft failed"
 
         # These are the properties we will change in the sddraft xml.  They pertain to the WMS Server.
         soe = 'WMSServer'
@@ -472,7 +505,7 @@ for map in mapList:
         analysis = arcpy.mapping.AnalyzeForSD(sddraft)
 
         # Print errors, warnings, and messages returned from the analysis
-        print "The following information was returned during analysis of the MXD:"
+        print "The following information was returned during analysis of "+mapName+":"
         for key in ('messages', 'warnings', 'errors'):
           print '----' + key.upper() + '---'
           vars = analysis[key]

@@ -72,6 +72,36 @@ pklFileDict = file(saveLoc+"\\pklFileDict.txt", 'w')
 pickle.dump(fieldDict, pklFileDict)
 pklFileDict.close()
 
+#Determine master directory
+try:
+    pklFile = file(saveLoc+"\\pklFileDIR.txt", 'r')
+    restoreValDIR = pickle.load(pklFile)
+    if setupOptIn == 'Setup':
+        path = eg.diropenbox("Path to master directory.  Program will search subfolders for MXD files.", default= restoreValDIR)
+    else: path = restoreValDIR
+except:
+    path = eg.diropenbox("Path to master directory.  Program will search subfolders for MXD files.")
+
+pklFile.close()
+pklFile = file(saveLoc+"\\pklFileDIR.txt", 'w')
+pickle.dump(path, pklFile)
+pklFile.close()
+
+#Determine GDB master directory
+try:
+    pklFile = file(saveLoc+"\\pklFileGDBDIR.txt", 'r')
+    restoreValGDB = pickle.load(pklFile)
+    if setupOptIn == 'Setup':
+        path = eg.diropenbox("Path to master directory containing GDB files.  Program will search subfolders.", default= restoreValGDB)
+    else: path = restoreValGDB
+except:
+    path = eg.diropenbox("Path to master directory containing GDB files.  Program will search subfolders.")
+
+pklFile.close()
+pklFile = file(saveLoc+"\\pklFileGDBDIR.txt", 'w')
+pickle.dump(path, pklFile)
+pklFile.close()
+
 #Use special folder name?
 try:
     pklFile = file(saveLoc+"\\pklFileFLDROptIn.txt", 'r')
@@ -115,10 +145,10 @@ try:
 except: defaultCon = 'failed'
 try:
     pklFile = file(saveLoc+"\\pklFileKHAN.txt", 'r')
-    restoreValDIR = pickle.load(pklFile)
+    restoreValKhan = pickle.load(pklFile)
     if setupOptIn == 'Setup':
-        path = eg.fileopenbox("Navigate to and select the ArcGIS Server Connection file (*.ags)", default= restoreValDIR)
-    else: path = restoreValDIR
+        path = eg.fileopenbox("Navigate to and select the ArcGIS Server Connection file (*.ags)", default= restoreValKhan)
+    else: path = restoreValKhan
 except:
     if defaultCon != 'failed':
         path = eg.fileopenbox("Navigate to and select the ArcGIS Server Connection file (*.ags)", default = defaultCon)
@@ -127,21 +157,6 @@ except:
 
 pklFile.close()
 pklFile = file(saveLoc+"\\pklFileKHAN.txt", 'w')
-pickle.dump(path, pklFile)
-pklFile.close()
-
-#Determine master directory
-try:
-    pklFile = file(saveLoc+"\\pklFileDIR.txt", 'r')
-    restoreValDIR = pickle.load(pklFile)
-    if setupOptIn == 'Setup':
-        path = eg.diropenbox("Path to master directory.  Program will search subfolders for MXD files.", default= restoreValDIR)
-    else: path = restoreValDIR
-except:
-    path = eg.diropenbox("Path to master directory.  Program will search subfolders for MXD files.")
-
-pklFile.close()
-pklFile = file(saveLoc+"\\pklFileDIR.txt", 'w')
 pickle.dump(path, pklFile)
 pklFile.close()
 
@@ -157,17 +172,31 @@ else: pass
 
 #Choose services to run script on
 #Choose single file or folder
-choices = ["One","All"]
+#Load maps to retry
+try:
+    pklFileErr = file (saveLoc+"\\pklFileErrMaps.txt", 'r')
+    retryMaps = pickle.load(pklFileErr)
+    pklFileErr.close()
+except: retryMaps = [] #no maps to load
+
+if len(retryMaps) > 0:
+    choices = ["One", "All", "Retry Last"]
+else:
+    choices = ["One","All"]
+    
 OneOrAll = eg.buttonbox("Do you wish to publish one file, or all the MXD files in the MXD Master Directory?", choices=choices)
 pklFile = file(saveLoc+"\\OneOrAll.txt", 'w')
 pickle.dump(OneOrAll, pklFile)
 pklFile.close()
 if OneOrAll == "One":
     try:
-        default_MXD_File = restoreValDIR +'\\*'
+        default_MXD_File = restoreValDIR +'\\'
         MXD_File = eg.fileopenbox("Navigate to and select your MXD file", default = default_MXD_File)
     except:
         MXD_File = eg.fileopenbox("Navigate to and select your MXD file")
+    pklFile = file(saveLoc+"\\MXD_File.txt", 'w')
+    pickle.dump(MXD_File, pklFile)
+    pklFile.close()
 else: pass
 
 ###-END GUI-###
@@ -175,7 +204,6 @@ else: pass
 #Part Two
 try:
     os.system('AutoPub.py')
-    print 'pass'
 except: print "Can't execute AutoPub"
 
 #Load errors from AutoPub
