@@ -367,13 +367,23 @@ for map in mapList:
         # You may replace attributes in the following list to suit your needs but do not take them out of order.  The matching system will fail if you do.
         keyList = ('inheritLayerNames', 'name','abstract','keyword', 'contactPerson', 'contactPosition', 'contactOrganization',
                    'address', 'addressType', 'city', 'stateOrProvince', 'postCode', 'country',
-                   'contactVoiceTelephone', 'contactElectronicMailAddress', 'fees')
+                   'contactVoiceTelephone', 'contactElectronicMailAddress', 'fees', 'ListSupportedCRS')
         valueList = ('true', 'WMS', str(Abstract), str(keyTags), fieldDict.get('Name'), fieldDict.get('Position'),
                      fieldDict.get('Organization (Provider)'),fieldDict.get('Street Address'), 'Postal', fieldDict.get('City'), fieldDict.get('State'),
-                     fieldDict.get('Postal (Zip) Code'), fieldDict.get('Country'), fieldDict.get('Phone'), fieldDict.get('Email'), 'none')
+                     fieldDict.get('Postal (Zip) Code'), fieldDict.get('Country'), fieldDict.get('Phone'), fieldDict.get('Email'), 'none', 'EPSG:3857')
         
         #zero out x
         x = 0
+
+        #Check for ListSupportedCRS
+        try:
+            EPSG = doc.getElementsByTagName("ListSupportedCRS")
+        except: EPSG = []
+
+        if len(EPSG) > 0:
+            LSCRS = 'exists'
+        else: LSCRS = 'create'
+
         # Read the sddraft xml.
         doc = DOM.parse(sddraft)
         # Find all elements named TypeName. This is where the server object extension (SOE) names are defined.
@@ -389,11 +399,25 @@ for map in mapList:
                     # Modify SOE property. We have to drill down to the relevant property.
                     if extElement.tagName == 'Props':
                         for propArray in extElement.childNodes:
+                            if LSCRS == 'create' and x == 0:
+                                print 'appending ListSupportedCRS'
+                                ele = doc.createElement('PropertySetProperty')
+                                ele.attributes['xsi:type']="typens:PropertySetProperty"
+                                propArray.appendChild(ele)
                             for propSet in propArray.childNodes:
+                                if propSet.hasChildNodes() == False:
+                                    print 'appending LSCRS Key'
+                                    propSet.appendChild(doc.createElement('Key'))
+                                    txt = doc.createTextNode('ListSupportedCRS')
+                                    propSet.firstChild.appendChild(txt)
+                                    ele = doc.createElement('Value')
+                                    ele.attributes['xsi:type']="xs:string"
+                                    propSet.appendChild(ele)
                                 for prop in propSet.childNodes:
                                     if prop.tagName == "Key":
                                         for key in keyList:
                                             if prop.firstChild.data == key:
+                                                print key
                                                 if prop.nextSibling.hasChildNodes():
                                                     prop.nextSibling.firstChild.data = valueList[0+x]
                                                 else:
@@ -433,7 +457,7 @@ for map in mapList:
             #Search Replace Description with WMS Description.
             DP = doc.getElementsByTagName("ItemInfo")
             key = "Description"
-            val = "This web map service (WMS) was published using ArcGIS Server v. 10.2 and is compliant with OGC (Open Geospatial Consortium) version 1.3.0 specifications. This service provides dynamic, spatially referenced geographic information using data collected for the National Geothermal Data System (<a href=\"http://www.geothermaldata.org/\">http://www.geothermaldata.org/</a>). In addition to the WMS capabilities, this service was designed to be interoperable with KML (Keyhole Markup Language). A KML service allows the client to view an image of the data in three dimensions, using free software available for download on the internet such as ArcGIS Explorer or Google Earth. For more information on OGC specifications, visit <a href=\"http://www.opengeospatial.org/standards\">http://www.opengeospatial.org/standards</a>."
+            val = "This web map service (WMS) was published using ArcGIS Server v. 10.1 and is compliant with OGC (Open Geospatial Consortium) version 1.3.0 specifications. This service provides dynamic, spatially referenced geographic information using data collected for the National Geothermal Data System (<a href=\"http://www.geothermaldata.org/\">http://www.geothermaldata.org/</a>). In addition to the WMS capabilities, this service was designed to be interoperable with KML (Keyhole Markup Language). A KML service allows the client to view an image of the data in three dimensions, using free software available for download on the internet such as ArcGIS Explorer or Google Earth. For more information on OGC specifications, visit <a href=\"http://www.opengeospatial.org/standards\">http://www.opengeospatial.org/standards</a>."
             for direct in DP:
                 nList = direct.childNodes
                 for node in nList:
@@ -484,7 +508,7 @@ for map in mapList:
             #Search Replace Description with WFS capable service description.
             DP = doc.getElementsByTagName("ItemInfo")
             key = "Description"
-            val = "This web map service (WMS) was published using ArcGIS Server v. 10.2 and is compliant with OGC (Open Geospatial Consortium) version 1.3.0 specifications. This service provides dynamic, spatially referenced geographic information using data collected for the National Geothermal Data System (<a href=\"http://www.geothermaldata.org/\">http://www.geothermaldata.org/</a>). In addition to the WMS capabilities, this service was designed to be interoperable with both WFS (Web Feature Services) as well as KML (Keyhole Markup Language). The WFS capabilities allow the client to query, make additions and/or modifications to an existing dataset. WFS can be utilized through the interoperability extension in ArcCatalog. For more information on using the ArcGIS data interoperability extension visit <a href=\"http://www.esri.com/software/arcgis/extensions/datainteroperability/common-questions.html\">http://www.esri.com/software/arcgis/extensions/datainteroperability/common-questions.html</a>. A KML service allows the client to view an image of the data in three dimensions, using free software available for download on the internet such as ArcGIS Explorer or Google Earth. For more information on OGC specifications, visit <a href=\"http://www.opengeospatial.org/standards\">http://www.opengeospatial.org/standards</a>."
+            val = "This web map service (WMS) was published using ArcGIS Server v. 10.1 and is compliant with OGC (Open Geospatial Consortium) version 1.3.0 specifications. This service provides dynamic, spatially referenced geographic information using data collected for the National Geothermal Data System (<a href=\"http://www.geothermaldata.org/\">http://www.geothermaldata.org/</a>). In addition to the WMS capabilities, this service was designed to be interoperable with both WFS (Web Feature Services) as well as KML (Keyhole Markup Language). The WFS capabilities allow the client to query, make additions and/or modifications to an existing dataset. WFS can be utilized through the interoperability extension in ArcCatalog. For more information on using the ArcGIS data interoperability extension visit <a href=\"http://www.esri.com/software/arcgis/extensions/datainteroperability/common-questions.html\">http://www.esri.com/software/arcgis/extensions/datainteroperability/common-questions.html</a>. A KML service allows the client to view an image of the data in three dimensions, using free software available for download on the internet such as ArcGIS Explorer or Google Earth. For more information on OGC specifications, visit <a href=\"http://www.opengeospatial.org/standards\">http://www.opengeospatial.org/standards</a>."
             for direct in DP:
                 nList = direct.childNodes
                 for node in nList:
