@@ -355,6 +355,9 @@ for map in mapList:
         Service = mapName[:-4]
         sddraft = parentFolder +"\\service_sd\\"+ Service +".sddraft"
         sd = parentFolder +"\\service_sd\\"+ Service +".sd"
+        if fieldDict.get('Online Resource URL').endswith('/'):
+            pass
+        else: fieldDict['Online Resource URL'] = fieldDict.get('Online Resource URL') + '/'
 
         # Create service definition draft
         print "Creating Service Definition Draft"
@@ -365,13 +368,13 @@ for map in mapList:
         # These are the properties we will change in the sddraft xml.  They pertain to the WMS Server.
         soe = 'WMSServer'
         # You may replace attributes in the following list to suit your needs but do not take them out of order.  The matching system will fail if you do.
-        keyList = ('inheritLayerNames', 'name','abstract','keyword', 'contactPerson', 'contactPosition', 'contactOrganization',
+        keyList = ('onlineResource', 'inheritLayerNames', 'name','abstract','keyword', 'contactPerson', 'contactPosition', 'contactOrganization',
                    'address', 'addressType', 'city', 'stateOrProvince', 'postCode', 'country',
                    'contactVoiceTelephone', 'contactElectronicMailAddress', 'fees', 'ListSupportedCRS')
-        valueList = ('true', 'WMS', str(Abstract), str(keyTags), fieldDict.get('Name'), fieldDict.get('Position'),
+        valueList = (fieldDict.get('Online Resource URL')+Service+'/MapServer/WMSServer', 'true', 'WMS', str(Abstract), str(keyTags), fieldDict.get('Name'), fieldDict.get('Position'),
                      fieldDict.get('Organization (Provider)'),fieldDict.get('Street Address'), 'Postal', fieldDict.get('City'), fieldDict.get('State'),
-                     fieldDict.get('Postal (Zip) Code'), fieldDict.get('Country'), fieldDict.get('Phone'), fieldDict.get('Email'), 'none', 'EPSG:3857')
-        
+                     fieldDict.get('Postal (Zip) Code'), fieldDict.get('Country'), fieldDict.get('Phone'), fieldDict.get('Email'), 'none', 'EPSG:3857')       
+
         #zero out x
         x = 0
 
@@ -472,10 +475,10 @@ for map in mapList:
             # These are the properties we will change in the sddraft xml.  They pertain to the WFS Server.
             soe = 'WFSServer'
             # You may replace attributes in the following list to suit your needs but do not take them out of order.  The matching system will fail if you do.
-            keyList = ('appSchemaURI','appSchemaPrefix', 'title', 'abstract','keyword','serviceType', 'serviceTypeVersion', 'fees', 'providerName', 'providerSite',
+            keyList = ('onlineResource','appSchemaURI','appSchemaPrefix', 'title', 'abstract','keyword','serviceType', 'serviceTypeVersion', 'fees', 'providerName', 'providerSite',
                        'individualName', 'positionName', 'phone', 'deliveryPoint', 'city', 'administrativeArea',
                        'postalCode', 'country', 'electronicMailAddress', 'hoursOfService', 'role')
-            valueList = (str(AppSchemaURI),'aasg', str(Service), str(Abstract), str(keyTags), 'WFS', r'1.1.0', 'None', fieldDict.get('Organization (Provider)'),
+            valueList = (fieldDict.get('Online Resource URL')+Service+'/MapServer/WFSServer', str(AppSchemaURI),'aasg', str(Service), str(Abstract), str(keyTags), 'WFS', r'1.1.0', 'None', fieldDict.get('Organization (Provider)'),
                          fieldDict.get('Website'),fieldDict.get('Name'),
                          fieldDict.get('Position'),fieldDict.get('Phone'),fieldDict.get('Street Address'),
                          fieldDict.get('City'), fieldDict.get('State'), fieldDict.get('Postal (Zip) Code'), fieldDict.get('Country'),
