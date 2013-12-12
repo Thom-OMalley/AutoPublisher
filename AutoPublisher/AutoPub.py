@@ -1,5 +1,5 @@
 #import modules
-import os, pickle, sys
+import os, pickle, sys, shutil
 
 #Save folder for pickled files
 saveLoc = os.path.expanduser('~\\Documents\\GIS_Script_Data\\AutoPublisher10_1')
@@ -340,10 +340,7 @@ for map in mapList:
 
         #Save MXD
         mxd.save()
-        print "New Data Source Saved"
         # Provide path to connection file
-        '''To create this file, right-click a folder in the Catalog window and
-          click New > ArcGIS Server Connection'''
         pklFile = file(saveLoc+"\\pklFileKHAN.txt", 'r')
         con = pickle.load(pklFile)
         #Prepare Service_SD folder.  Create it if it doesn't exist
@@ -420,13 +417,12 @@ for map in mapList:
                                     if prop.tagName == "Key":
                                         for key in keyList:
                                             if prop.firstChild.data == key:
-                                                print key
                                                 if prop.nextSibling.hasChildNodes():
                                                     prop.nextSibling.firstChild.data = valueList[0+x]
                                                 else:
                                                     txt = doc.createTextNode(valueList[0+x])
                                                     prop.nextSibling.appendChild(txt)
-                                                print key + " paired with " + valueList[0+x]
+                                                #print key + " paired with " + valueList[0+x]
                                                 x = x + 1
         print "WMS Properties Updated"
         #Search Replace MinInstances
@@ -506,7 +502,7 @@ for map in mapList:
                                                 else:
                                                     txt = doc.createTextNode(valueList[0+x])
                                                     prop.nextSibling.appendChild(txt)
-                                                print key + " paired with " + valueList[0+x]
+                                                #print key + " paired with " + valueList[0+x]
                                                 x = x + 1
             #Search Replace Description with WFS capable service description.
             DP = doc.getElementsByTagName("ItemInfo")
@@ -557,7 +553,8 @@ for map in mapList:
                 print "Service successfully published"
             except:
                 print "-------Upload Error when trying to publish " + mapName
-                
+                errorList.append(mapName + ": " + messageError + ", Applies to: " + layerError)
+                addMap()
         else:
             print "Service could not be published because errors were found during analysis."
             errorList.append(mapName + ": " + messageError + ", Applies to: " + layerError)
@@ -567,6 +564,15 @@ for map in mapList:
         
         print mapName + " complete"
         print '\n'
+        #Remove unnecessary copies of data in SD folder
+        sd_Del = parentFolder +"\\service_sd\\"
+        sd_DelList = glob.glob(sd_Del)
+        for fldr in sd_DelList:
+            if fldr.endswith ("sd"): pass
+            else:
+                try:
+                    shutil.rmtree(fldr)
+                except: pass
         
         del sd, mxd
     except UnicodeEncodeError:
