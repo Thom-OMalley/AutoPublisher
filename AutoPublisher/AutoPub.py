@@ -297,7 +297,7 @@ for map in mapList:
         elif dataType == "WellFluidProduction":
             AppSchemaURI = "http://stategeothermaldata.org/uri-gin/aasg/xmlschema/fluidproduction/1.1"
         elif dataType == "WellTests":
-            AppSchemaURI = "http://stategeothermaldata.org/uri-gin/aasg/xmlschema/welltest/1.0"
+            AppSchemaURI = "http://stategeothermaldata.org/uri-gin/aasg/xmlschema/WellTest/1.0"
         else:
             AppSchemaURI = "null"
             errorList.append(mapName + ": No schema match")
