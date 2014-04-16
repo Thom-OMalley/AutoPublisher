@@ -451,7 +451,7 @@ for map in mapList:
                     
         #Determine whether or not to activate WFS by checking if the datasource is an image
         WFSCheck = arcpy.mapping.ListLayers(mxd)
-        if str(WFSCheck[0].dataSource).endswith("tif") or str(WFSCheck[0].dataSource).endswith("img") or WFSCheck[0].isRasterLayer == "True":
+        if str(WFSCheck[0].dataSource).endswith("tif") or str(WFSCheck[0].dataSource).endswith("img") or WFSCheck[0].isRasterLayer == True:
             print "MAP IS IMAGE"
             #Search Replace Description with WMS Description.
             DP = doc.getElementsByTagName("ItemInfo")
